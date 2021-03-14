@@ -1,0 +1,18 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "mytimer",
+      "type": "timerTrigger",
+      "direction": "in",
+      "schedule": "0 6 * * * *"
+    },
+    {
+      "name": "outputBlob",
+      "type": "blob",
+      "path": "actuals/closed_predictions.json",
+      "connection": "Blockblob",
+      "direction": "out"
+    }
+  ]
+}

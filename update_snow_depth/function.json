@@ -1,0 +1,18 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "mytimer",
+      "type": "timerTrigger",
+      "direction": "in",
+      "schedule": "0 5 * * * *"
+    },
+    {
+      "name": "outputBlob",
+      "type": "blob",
+      "path": "actuals/snow_depths.json",
+      "connection": "Blockblob",
+      "direction": "out"
+    }
+  ]
+}
