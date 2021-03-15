@@ -37,7 +37,6 @@ def main(mytimer: func.TimerRequest, outputBlob: func.Out[str]) -> None:
         for hour in range(6,56,6):
             r = requests.get(baseurl, headers=headers)
             weather_info = r.json()
-            #forecast_info = weather_info['properties']['timeseries'][hour]['data']
             df = df.append({'station_id' : station_id,
                 'forecast_time' : datetime_from_utc_to_local(parse(weather_info['properties']['timeseries'][hour]['time'])).strftime("%d.%m.%Y %H:%M:%S"),
                 'forecast_ref_time' : datetime_from_utc_to_local(parse(weather_info['properties']['meta']['updated_at'])).strftime("%d.%m.%Y %H:%M:%S"),

@@ -1,5 +1,4 @@
 import datetime
-import logging
 import azure.functions as func
 import requests
 from bs4 import BeautifulSoup
@@ -8,7 +7,7 @@ import numpy as np
 from datetime import date
 from azure.storage.blob import BlobServiceClient
 import math
-#import json
+import os
 
 def main(mytimer: func.TimerRequest, outputBlob: func.Out[str]) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
@@ -20,7 +19,7 @@ def main(mytimer: func.TimerRequest, outputBlob: func.Out[str]) -> None:
     "SN94195": "https://www.yr.no/nb/historikk/tabell/5-94255/Norge/Troms%20og%20Finnmark/Hammerfest/Hammerfest"
     }
 
-    blob_service_client = BlobServiceClient.from_connection_string("AccountName=man5101;AccountKey=Ua1xq+7LngswCSlZ5AhAX37Ri64Rn9h6rLIqIWdDeh0OYCPpFbePbXy8K9D5IsSL/CYD61QQNbepusMgJHyLOw==")
+    blob_service_client = BlobServiceClient.from_connection_string(os.environ['Blockblob'])
     f = blob_service_client.get_blob_client("actuals", 'snow_depths.json')
     json_content = f.download_blob().readall()
     dfExisting = pd.read_json(json_content)
@@ -32,8 +31,6 @@ def main(mytimer: func.TimerRequest, outputBlob: func.Out[str]) -> None:
     for station_id, baseurl in url_list.items():
 
         dt = date.today() - datetime.timedelta(days=1) if station_id == "SN94195" else date.today() 
-
-
         URL = baseurl + "?q=" \
                     + str(dt.year) + "-" \
                     + str(dt.month).zfill(2) + "-" \
@@ -77,6 +74,6 @@ def main(mytimer: func.TimerRequest, outputBlob: func.Out[str]) -> None:
              , "Snødybde": val
              }, ignore_index=True)
 
-    outputBlob.set(df_out.to_json(orient='records',force_ascii=False))
+    outputBlob.set(df_out.to_json(orient='records',force_ascii=False, indent=2))
 
  

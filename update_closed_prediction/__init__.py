@@ -5,12 +5,12 @@ from azure.storage.blob import ContainerClient
 import azure.functions as func
 import pandas as pd
 from pandas.core.frame import DataFrame
-#from sklearn.linear_model import ElasticNet
 from sklearn.ensemble import RandomForestClassifier
 import pickle
 from dateutil.parser import parse
 import math
 import numpy as np
+import os
 
 road_stations = {"SN79791": "E6 Saltfjellet", "SN84905": "E10 Bjørnfjell", "SN94195": "E6 Sennalandet" }
 
@@ -25,11 +25,11 @@ def build_file_name(station_id, obs, day, interval):
     return "{0}_obs{1}_d{2}{3}.pickle".format(station_id, dict_obs.get(obs), day, dict_interval.get(interval))
 
 def main(mytimer: func.TimerRequest, outputBlob: func.Out[str]) -> None: 
-
     logger = logging.getLogger("logger_name")
     logger.disabled = True
-    blob_service_actuals = ContainerClient.from_connection_string("AccountName=man5101;AccountKey=Ua1xq+7LngswCSlZ5AhAX37Ri64Rn9h6rLIqIWdDeh0OYCPpFbePbXy8K9D5IsSL/CYD61QQNbepusMgJHyLOw==", "actuals", logger=logger)
-    blob_service_pickles = ContainerClient.from_connection_string("AccountName=man5101;AccountKey=Ua1xq+7LngswCSlZ5AhAX37Ri64Rn9h6rLIqIWdDeh0OYCPpFbePbXy8K9D5IsSL/CYD61QQNbepusMgJHyLOw==", "treepickles", logger=logger)
+ 
+    blob_service_actuals = ContainerClient.from_connection_string(os.environ['Blockblob'], "actuals", logger=logger)
+    blob_service_pickles = ContainerClient.from_connection_string(os.environ['Blockblob'], "treepickles", logger=logger)
 
     f = blob_service_actuals.download_blob("weather_predictions.json")
     s = blob_service_actuals.download_blob("snow_depths.json")
@@ -41,7 +41,6 @@ def main(mytimer: func.TimerRequest, outputBlob: func.Out[str]) -> None:
 
     dfOut = DataFrame(columns=['station_id', 'station_name', 'weather_forecast_ref_time', 'obs', 'day', 'interval', 'prediction_sort_counter', 'prediction_time_from', 'prediction_time_to', 'closed_prediction'])
     for station_id in df["station_id"].unique(): 
-
 
         snow_depth = dfSnow[dfSnow['Station_id']==station_id].reset_index().get('Snødybde').fillna(0)
         air_temp = dfObs[dfObs['Station_id']==station_id].reset_index().get('air_temp').fillna(0)
@@ -82,7 +81,6 @@ def main(mytimer: func.TimerRequest, outputBlob: func.Out[str]) -> None:
                         dfInput['day_this_winter'] = datetime.today().timetuple().tm_yday - 274 if 0 < datetime.today().timetuple().tm_yday - 274 < 365 else datetime.today().timetuple().tm_yday + 91
 
                         pic = blob_service_pickles.download_blob(build_file_name(station_id, obs, day, interval)).readall()
-                        #model = ElasticNet()
                         model = RandomForestClassifier()
                         model = pickle.loads(pic)
                         ynew = model.predict_proba(dfInput.values)
